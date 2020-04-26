@@ -1,0 +1,10 @@
+.packages
+.dart_tool
+.idea
+build
+*.lock
+*.iml
+.metadata
+pubspec.lock
+*.log
+.fvm/flutter_sdk
