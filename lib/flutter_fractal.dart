@@ -1,4 +1,4 @@
-library flutter_turtle_graphics;
+library flutter_fractal;
 
 //
 export 'src/graphics_utils.dart';

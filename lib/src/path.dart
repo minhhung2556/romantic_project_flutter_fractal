@@ -2,8 +2,8 @@ import 'dart:math' as math;
 import 'dart:ui' show Offset, Path, PointMode;
 
 import 'package:flutter/material.dart';
-import 'package:flutter_turtle_graphics/src/complex.dart';
-import 'package:flutter_turtle_graphics/src/math.dart';
+import 'package:flutter_fractal/src/complex.dart';
+import 'package:flutter_fractal/src/math.dart';
 
 class TurtleGraphics extends Path {
   var _currentAngle = 0.0;

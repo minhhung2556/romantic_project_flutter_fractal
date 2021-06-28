@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_turtle_graphics/flutter_turtle_graphics.dart';
+import 'package:flutter_fractal/flutter_fractal.dart';
 
 void main() => runApp(MyApp());
 
@@ -12,7 +12,7 @@ class _MyAppState extends State<MyApp> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Turtle Graphics',
+      title: 'Example',
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
