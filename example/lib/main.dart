@@ -21,7 +21,6 @@ class _MyAppState extends State<MyApp> {
       ),
       routes: {
         RouteNames.turtle: (context) => TurtleGraphicDemo(),
-        RouteNames.mandelbrot: (context) => MandelbrotDemo(),
       },
       home: HomePage(),
     );
@@ -63,59 +62,40 @@ class _HomePageState extends State<HomePage> {
   }
 }
 
-class MandelbrotDemo extends StatefulWidget {
-  @override
-  _MandelbrotDemoState createState() => _MandelbrotDemoState();
-}
-
-class _MandelbrotDemoState extends State<MandelbrotDemo> {
-  MandelbrotPainter? mandelbrotPainter;
-  @override
-  void initState() {
-    Future.delayed(Duration(milliseconds: 200), () {
-      var size = MediaQuery.of(context).size;
-      mandelbrotPainter =
-          MandelbrotPainter(size.width.round(), size.height.round());
-      int iterations = 20;
-      for (var i = 0; i < iterations; ++i) {
-        mandelbrotPainter!.update();
-      }
-      setState(() {});
-    });
-    super.initState();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Mandelbrot'),
-      ),
-      body: mandelbrotPainter == null
-          ? Container()
-          : CustomPaint(
-              painter: mandelbrotPainter,
-              size: MediaQuery.of(context).size,
-            ),
-    );
-  }
-}
-
 class TurtleGraphicDemo extends StatefulWidget {
   @override
   _TurtleGraphicDemoState createState() => _TurtleGraphicDemoState();
 }
 
-class _TurtleGraphicDemoState extends State<TurtleGraphicDemo> {
+class _TurtleGraphicDemoState extends State<TurtleGraphicDemo>
+    with SingleTickerProviderStateMixin {
   late TurtleGraphic path;
+  late AnimationController controller;
+  late List<Color> colors;
   @override
   void initState() {
+    controller =
+        AnimationController(vsync: this, duration: Duration(seconds: 2));
+    controller.addListener(() {
+      setState(() {
+        create();
+      });
+    });
+    controller.repeat(reverse: true);
+    colors = List.generate(10, (index) => randomColor());
     create();
     super.initState();
   }
 
   @override
+  void dispose() {
+    controller.dispose();
+    super.dispose();
+  }
+
+  @override
   void didUpdateWidget(covariant TurtleGraphicDemo oldWidget) {
+    colors = List.generate(10, (index) => randomColor());
     create();
     super.didUpdateWidget(oldWidget);
   }
@@ -139,12 +119,7 @@ class _TurtleGraphicDemoState extends State<TurtleGraphicDemo> {
             ..shader = ui.Gradient.radial(
               size.center(Offset.zero),
               size.width,
-              [
-                randomColor(),
-                randomColor(),
-                randomColor(),
-                randomColor(),
-              ],
+              this.colors.map((e) => e).skip(6).toList(),
               [0.0, 0.3, 0.6, 1.0],
             ),
         ),
@@ -154,9 +129,27 @@ class _TurtleGraphicDemoState extends State<TurtleGraphicDemo> {
   }
 
   void create() {
-    path = TurtleGraphic();
-    path
-      ..turnRight(-90)
-      ..genTree2Branches();
+    var av = controller.value;
+    path = TurtleGraphic()
+      ..genSpiral(
+        alpha: 36,
+        distance: Tween<double>(begin: -30, end: 30).transform(av),
+        count: 12,
+        builder: (path) {
+          var a = 12.0;
+          path.genSpiral(
+            alpha: a,
+            distance: Tween<double>(begin: 0, end: 10).transform(av),
+            count: 360 ~/ a,
+            builder: (path) {
+              path.addOval(Rect.fromCenter(
+                center: path.currentPoint,
+                width: Tween<double>(begin: 2, end: 5).transform(av),
+                height: Tween<double>(begin: 2, end: 5).transform(av),
+              ));
+            },
+          );
+        },
+      );
   }
 }

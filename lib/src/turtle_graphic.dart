@@ -2,6 +2,7 @@ import 'dart:math' as math;
 import 'dart:ui' show Offset, Path, PointMode;
 
 import 'package:flutter/material.dart';
+import 'package:flutter_fractal/flutter_fractal.dart';
 import 'package:flutter_fractal/src/math.dart';
 
 import 'math.dart';
@@ -22,10 +23,6 @@ extension PointEx on Offset {
 class TurtleGraphic extends Path {
   var _currentAngle = 0.0;
   var _currentPoint = Offset.zero;
-  var _minX = 0.0;
-  var _minY = 0.0;
-  var _maxX = 0.0;
-  var _maxY = 0.0;
   var _points = <Offset>[];
 
   get currentAngle => _currentAngle;
@@ -35,7 +32,6 @@ class TurtleGraphic extends Path {
     super.moveTo(x, y);
     _currentPoint = Offset(x, y);
     _points.add(_currentPoint);
-    _findMinMax();
   }
 
   void moveToPoint(Offset p) {
@@ -86,85 +82,82 @@ class TurtleGraphic extends Path {
     lineForward(-distance);
   }
 
-  void _findMinMax() {
-    _minX = 0;
-    _minY = 0;
-    _maxX = 0;
-    _maxY = 0;
-    for (var o in _points) {
-      _minX = math.min(o.dx, _minX);
-      _minY = math.min(o.dy, _minY);
-      _maxX = math.max(o.dx, _maxX);
-      _maxY = math.max(o.dy, _maxY);
-    }
-  }
+  Offset get currentPoint => _currentPoint;
 
-  get currentPoint => _currentPoint;
+  List<Offset> get points => _points;
 
-  get minX => _minX;
-
-  get minY => _minY;
-
-  get maxX => _maxX;
-
-  get maxY => _maxY;
-
-  get points => _points;
+  Offset get center => getBounds().center;
 }
 
 extension TurtleGraphicsCollections on TurtleGraphic {
-  void genC(double a, int N) {
+  void genC({
+    required double a,
+    int N: 4,
+  }) {
     double aV2_2 = a * (math.sqrt(2) / 2);
     if (N > 1) {
-      genC(aV2_2, N - 1);
+      genC(a: aV2_2, N: N - 1);
       turnRight(90);
-      genC(aV2_2, N - 1);
+      genC(a: aV2_2, N: N - 1);
       turnRight(-90);
     } else {
       lineForward(a);
     }
   }
 
-  void genDragon(double a, int N, double dir) {
+  void genDragon({
+    required double a,
+    int N: 5,
+    double dir: 1,
+  }) {
     double aV2_2 = a * (math.sqrt(2) / 2);
     if (N > 1) {
       turnRight((-45 * dir).toDouble());
-      genDragon(aV2_2, N - 1, 1);
+      genDragon(a: aV2_2, N: N - 1, dir: 1);
       turnRight((90 * dir).toDouble());
-      genDragon(aV2_2, N - 1, -1);
+      genDragon(a: aV2_2, N: N - 1, dir: -1);
       turnRight((-45 * dir).toDouble());
     } else {
       lineForward(a);
     }
   }
 
-  void genKoch(double a, int N, double alpha) {
+  void genKoch({
+    required double a,
+    int N: 4,
+    required double alpha,
+  }) {
     assert(alpha <= 60 && alpha >= -60);
     if (N > 1) {
       a /= 3;
-      genKoch(a, N - 1, alpha);
+      genKoch(a: a, N: N - 1, alpha: alpha);
       turnRight(-alpha);
-      genKoch(a, N - 1, alpha);
+      genKoch(a: a, N: N - 1, alpha: alpha);
       turnRight(alpha * 2);
-      genKoch(a, N - 1, alpha);
+      genKoch(a: a, N: N - 1, alpha: alpha);
       turnRight(-alpha);
-      genKoch(a, N - 1, alpha);
+      genKoch(a: a, N: N - 1, alpha: alpha);
     } else {
       lineForward(a);
     }
   }
 
-  void genSierpinskiTriangle(Offset p, double a, double theta, int N) {
+  void genSierpinskiTriangle({
+    required Offset p,
+    required double a,
+    required double theta,
+    int N: 4,
+  }) {
     if (N > 1) {
       a /= 2;
       double alpha = theta * kDegToRad;
-      genSierpinskiTriangle(p, a, theta, N - 1);
+      genSierpinskiTriangle(p: p, a: a, theta: theta, N: N - 1);
       var p2 = Offset(p.dx + (a * math.cos(math.pi / 3 + alpha)),
           p.dy - (a * math.sin(math.pi / 3 + alpha)));
-      genSierpinskiTriangle(p2, a, theta, N - 1);
+      genSierpinskiTriangle(p: p2, a: a, theta: theta, N: N - 1);
       var p3 =
           Offset(p.dx + (a * math.cos(alpha)), p.dy - (a * math.sin(alpha)));
-      genSierpinskiTriangle(p3, a, theta, N - 1);
+      genSierpinskiTriangle(p: p3, a: a, theta: theta, N: N - 1);
     } else {
       moveToPoint(p);
       setAngle(theta);
@@ -251,16 +244,13 @@ class TurtleGraphicsPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     canvas.save();
     var center = size.center(Offset.zero);
-    canvas.translate(center.dx - (path._maxX + path._minX) / 2,
-        center.dy - (path._maxY + path._minY) / 2);
+    canvas.translate(center.dx - path.center.dx, center.dy - path.center.dy);
     canvas.drawPath(path, painter);
     canvas.restore();
   }
 
   @override
   bool shouldRepaint(covariant TurtleGraphicsPainter oldDelegate) {
-    // debugPrint(
-    //     'TurtleGraphicsPainter.shouldRepaint: minX=${path.minX},maxX=${path.maxX},minY=${path.minY},maxY=${path.maxY}');
     return path._points != oldDelegate.path._points;
   }
 }
