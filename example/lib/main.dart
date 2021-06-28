@@ -1,3 +1,5 @@
+import 'dart:ui' as ui;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_fractal/flutter_fractal.dart';
 
@@ -15,10 +17,20 @@ class _MyAppState extends State<MyApp> {
       title: 'Example',
       theme: ThemeData(
         primarySwatch: Colors.blue,
+        backgroundColor: Colors.black,
       ),
+      routes: {
+        RouteNames.turtle: (context) => TurtleGraphicDemo(),
+        RouteNames.mandelbrot: (context) => MandelbrotDemo(),
+      },
       home: HomePage(),
     );
   }
+}
+
+class RouteNames {
+  static const turtle = 'turtle';
+  static const mandelbrot = 'mandelbrot';
 }
 
 class HomePage extends StatefulWidget {
@@ -26,128 +38,125 @@ class HomePage extends StatefulWidget {
   _HomePageState createState() => _HomePageState();
 }
 
-class _HomePageState extends State<HomePage>
-    with SingleTickerProviderStateMixin {
-  List<TurtleGraphics>? paths;
-  late AnimationController animationController;
-  final kDirTween = Tween<double>(begin: -1, end: 1);
-  final kAlphaTween = Tween<double>(begin: 0, end: 360);
-  final kDeltaRadiusTween = Tween<double>(begin: -2, end: 2);
-  late Color color, color1;
-  late MandelbrotPainter mandelbrotPainter;
+class _HomePageState extends State<HomePage> {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.black,
+      body: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          ElevatedButton(
+              onPressed: () {
+                Navigator.pushNamed(context, RouteNames.turtle);
+              },
+              child: Text('Turtle Graphic')),
+          ElevatedButton(
+              onPressed: () {
+                Navigator.pushNamed(context, RouteNames.mandelbrot);
+              },
+              child: Text('Mandelbrot Set')),
+        ],
+      ),
+    );
+  }
+}
+
+class MandelbrotDemo extends StatefulWidget {
+  @override
+  _MandelbrotDemoState createState() => _MandelbrotDemoState();
+}
+
+class _MandelbrotDemoState extends State<MandelbrotDemo> {
+  MandelbrotPainter? mandelbrotPainter;
   @override
   void initState() {
-    createColors();
-    animationController = AnimationController(
-        vsync: this, duration: Duration(milliseconds: 2000));
-    animationController.addListener(() {
-      setState(() {
-        createTurtle();
-      });
+    Future.delayed(Duration(milliseconds: 200), () {
+      var size = MediaQuery.of(context).size;
+      mandelbrotPainter =
+          MandelbrotPainter(size.width.round(), size.height.round());
+      int iterations = 20;
+      for (var i = 0; i < iterations; ++i) {
+        mandelbrotPainter!.update();
+      }
+      setState(() {});
     });
-    animationController.repeat(reverse: true);
-
-    mandelbrotPainter = MandelbrotPainter(200, 300);
-    int iter = 120;
-    for (var i = 0; i < iter; ++i) {
-      mandelbrotPainter.update();
-    }
     super.initState();
-  }
-
-  void createColors() {
-    color = randomColor(false);
-    color1 = randomColor(false);
-  }
-
-  @override
-  void didUpdateWidget(covariant HomePage oldWidget) {
-    createColors();
-    super.didUpdateWidget(oldWidget);
-  }
-
-  void createTurtle() {
-    var av = animationController.value;
-    paths = [
-      TurtleGraphics()..genC(20, 4),
-      /*TurtleGraphics()
-        ..genSpiral(
-            alpha: 60,
-            distance: 0,
-            count: 6,
-            builder: (TurtleGraphics path) {
-              path.genTree2Branches(
-                a: 20.0,
-                deltaA1: av,
-                deltaA2: av,
-                N: 5,
-                alpha1: Tween<double>(begin: -12, end: 12).transform(av),
-                deltaAlpha1: Tween<double>(begin: -11, end: 11).transform(av),
-                alpha2: Tween<double>(begin: -32, end: 32).transform(av),
-                deltaAlpha2: Tween<double>(begin: -11, end: 11).transform(av),
-              );
-            }),*/
-      /*TurtleGraphics()
-        ..genSpiral(
-            alpha: 60,
-            distance: 50,
-            count: 10,
-            builder: (TurtleGraphics path) {
-              path.genSpiralCircle(
-                radius: Tween<double>(begin: -12, end: 12).transform(av),
-                deltaRadius: av * 10,
-                alpha: av,
-                deltaAlpha: 0,
-                distance: 5,
-                deltaDistance: 10,
-                count: 50,
-              );
-            }),*/
-    ].reversed.toList();
   }
 
   @override
   Widget build(BuildContext context) {
-    var screenSize = MediaQuery.of(context).size;
-    var size = Size(screenSize.width / 2, screenSize.width / 2);
-    var center = Offset.zero;
-    // var center = size.center(Offset.zero);
     return Scaffold(
-      backgroundColor: Colors.black,
-      body: paths == null
+      appBar: AppBar(
+        title: Text('Mandelbrot'),
+      ),
+      body: mandelbrotPainter == null
           ? Container()
-          :
-          //
-          /*Stack(
-              children: paths!
-                  .map((e) => Center(
-                        child: CustomPaint(
-                          painter: TurtleGraphicsPainter(
-                            path: e,
-                            painter: Paint()
-                              ..color = Colors.white
-                              ..strokeWidth = 2
-                              ..style = PaintingStyle.stroke
-                              ..strokeCap = StrokeCap.round
-                              ..strokeJoin = StrokeJoin.round
-                              ..shader = ui.Gradient.radial(
-                                center,
-                                size.width,
-                                [color, color1, color, color1],
-                                [0.0, 0.3, 0.6, 1.0],
-                              ),
-                          ),
-                          size: size,
-                        ),
-                      ))
-                  .toList(),
-            ),*/
-          Center(
-              child: CustomPaint(
-                painter: mandelbrotPainter,
-                size: size,
-              ),
+          : CustomPaint(
+              painter: mandelbrotPainter,
+              size: MediaQuery.of(context).size,
             ),
     );
+  }
+}
+
+class TurtleGraphicDemo extends StatefulWidget {
+  @override
+  _TurtleGraphicDemoState createState() => _TurtleGraphicDemoState();
+}
+
+class _TurtleGraphicDemoState extends State<TurtleGraphicDemo> {
+  late TurtleGraphic path;
+  @override
+  void initState() {
+    create();
+    super.initState();
+  }
+
+  @override
+  void didUpdateWidget(covariant TurtleGraphicDemo oldWidget) {
+    create();
+    super.didUpdateWidget(oldWidget);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    var size = MediaQuery.of(context).size;
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('TurtleGraphic'),
+      ),
+      body: CustomPaint(
+        painter: TurtleGraphicsPainter(
+          path: path,
+          painter: Paint()
+            ..color = Colors.white
+            ..strokeWidth = 2
+            ..style = PaintingStyle.stroke
+            ..strokeCap = StrokeCap.round
+            ..strokeJoin = StrokeJoin.round
+            ..shader = ui.Gradient.radial(
+              size.center(Offset.zero),
+              size.width,
+              [
+                randomColor(),
+                randomColor(),
+                randomColor(),
+                randomColor(),
+              ],
+              [0.0, 0.3, 0.6, 1.0],
+            ),
+        ),
+        size: MediaQuery.of(context).size,
+      ),
+    );
+  }
+
+  void create() {
+    path = TurtleGraphic();
+    path
+      ..turnRight(-90)
+      ..genTree2Branches();
   }
 }
