@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 import 'dart:ui';
 
+/// make a random color
 Color randomColor([bool withAlpha = true]) {
   var ran = math.Random.secure();
   var a = withAlpha ? ran.nextInt(255) : 255;

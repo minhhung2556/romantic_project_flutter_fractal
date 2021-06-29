@@ -1,11 +1,21 @@
 import 'dart:math';
 
+/// convert from degree to radian
 const kDegToRad = pi / 180.0;
-const kRadToDeg = 180.0 / pi;
-double abs(double a) => a < 0 ? -a : a;
-double toRad(double degree) => degree * kDegToRad;
-double toDegree(double radians) => radians * kRadToDeg;
 
+/// convert from degree to radian
+const kRadToDeg = 180.0 / pi;
+
+/// make number [a] be positive
+double abs(double a) => a < 0 ? -a : a;
+
+/// convert [degree] to radian
+double toRad(double degree) => degree * kDegToRad;
+
+/// convert [radian] to degree
+double toDegree(double radian) => radian * kRadToDeg;
+
+/// calculate factorial of [x]
 double factorial(double x) {
   if (x < 3) {
     if (x < 2)
@@ -23,6 +33,8 @@ double factorial(double x) {
 
 const int _kSignMask = 0x80000000;
 const double _kATanB = 0.596227;
+
+/// calculate atan from [x] & [y]
 double atan2(double x, double y) {
   // Extract the sign bits
   int uxS = _kSignMask & x.round();
