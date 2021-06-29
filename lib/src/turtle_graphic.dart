@@ -233,11 +233,11 @@ extension TurtleGraphicsCollections on TurtleGraphic {
 
 class TurtleGraphicsPainter extends CustomPainter {
   final TurtleGraphic path;
-  final Paint painter;
+  final Paint brush;
 
   TurtleGraphicsPainter({
     required this.path,
-    required this.painter,
+    required this.brush,
   });
 
   @override
@@ -245,7 +245,7 @@ class TurtleGraphicsPainter extends CustomPainter {
     canvas.save();
     var center = size.center(Offset.zero);
     canvas.translate(center.dx - path.center.dx, center.dy - path.center.dy);
-    canvas.drawPath(path, painter);
+    canvas.drawPath(path, brush);
     canvas.restore();
   }
 

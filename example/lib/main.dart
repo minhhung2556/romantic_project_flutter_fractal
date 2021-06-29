@@ -42,21 +42,24 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black,
-      body: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          ElevatedButton(
-              onPressed: () {
-                Navigator.pushNamed(context, RouteNames.turtle);
-              },
-              child: Text('Turtle Graphic')),
-          ElevatedButton(
-              onPressed: () {
-                Navigator.pushNamed(context, RouteNames.mandelbrot);
-              },
-              child: Text('Mandelbrot Set')),
-        ],
+      body: Padding(
+        padding: const EdgeInsets.all(24.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            ElevatedButton(
+                onPressed: () {
+                  Navigator.pushNamed(context, RouteNames.turtle);
+                },
+                child: Text('Turtle Graphic')),
+            ElevatedButton(
+                onPressed: () {
+                  Navigator.pushNamed(context, RouteNames.mandelbrot);
+                },
+                child: Text('Mandelbrot Set')),
+          ],
+        ),
       ),
     );
   }
@@ -107,17 +110,18 @@ class _TurtleGraphicDemoState extends State<TurtleGraphicDemo>
       appBar: AppBar(
         title: Text('TurtleGraphic'),
       ),
+      backgroundColor: Colors.black,
       body: CustomPaint(
         painter: TurtleGraphicsPainter(
           path: path,
-          painter: Paint()
+          brush: Paint()
             ..color = Colors.white
-            ..strokeWidth = 2
+            ..strokeWidth = 1
             ..style = PaintingStyle.stroke
             ..strokeCap = StrokeCap.round
             ..strokeJoin = StrokeJoin.round
             ..shader = ui.Gradient.radial(
-              size.center(Offset.zero),
+              Offset.zero,
               size.width,
               this.colors.map((e) => e).skip(6).toList(),
               [0.0, 0.3, 0.6, 1.0],
@@ -132,20 +136,22 @@ class _TurtleGraphicDemoState extends State<TurtleGraphicDemo>
     var av = controller.value;
     path = TurtleGraphic()
       ..genSpiral(
-        alpha: 36,
-        distance: Tween<double>(begin: -30, end: 30).transform(av),
+        alpha: 30,
+        distance: Tween<double>(begin: 10, end: 30).transform(av),
         count: 12,
         builder: (path) {
           var a = 12.0;
           path.genSpiral(
             alpha: a,
-            distance: Tween<double>(begin: 0, end: 10).transform(av),
+            distance: Tween<double>(begin: 10, end: 40).transform(av),
+            deltaDistance: 1,
             count: 360 ~/ a,
+            deltaAlpha: 1,
             builder: (path) {
               path.addOval(Rect.fromCenter(
                 center: path.currentPoint,
-                width: Tween<double>(begin: 2, end: 5).transform(av),
-                height: Tween<double>(begin: 2, end: 5).transform(av),
+                width: Tween<double>(begin: 1, end: 5).transform(av),
+                height: Tween<double>(begin: 1, end: 5).transform(av),
               ));
             },
           );
