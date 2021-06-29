@@ -1,5 +1,5 @@
 import 'dart:math' as math;
-import 'dart:ui' show Offset, Path, PointMode;
+import 'dart:ui' show Offset, Path;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_fractal/flutter_fractal.dart';
