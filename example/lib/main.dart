@@ -19,17 +19,9 @@ class _MyAppState extends State<MyApp> {
         primarySwatch: Colors.blue,
         backgroundColor: Colors.black,
       ),
-      routes: {
-        RouteNames.turtle: (context) => TurtleGraphicDemo(),
-      },
       home: HomePage(),
     );
   }
-}
-
-class RouteNames {
-  static const turtle = 'turtle';
-  static const mandelbrot = 'mandelbrot';
 }
 
 class HomePage extends StatefulWidget {
@@ -37,40 +29,7 @@ class HomePage extends StatefulWidget {
   _HomePageState createState() => _HomePageState();
 }
 
-class _HomePageState extends State<HomePage> {
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.black,
-      body: Padding(
-        padding: const EdgeInsets.all(24.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            ElevatedButton(
-                onPressed: () {
-                  Navigator.pushNamed(context, RouteNames.turtle);
-                },
-                child: Text('Turtle Graphic')),
-            ElevatedButton(
-                onPressed: () {
-                  Navigator.pushNamed(context, RouteNames.mandelbrot);
-                },
-                child: Text('Mandelbrot Set')),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class TurtleGraphicDemo extends StatefulWidget {
-  @override
-  _TurtleGraphicDemoState createState() => _TurtleGraphicDemoState();
-}
-
-class _TurtleGraphicDemoState extends State<TurtleGraphicDemo>
+class _HomePageState extends State<HomePage>
     with SingleTickerProviderStateMixin {
   late TurtleGraphic path;
   late AnimationController controller;
@@ -97,7 +56,7 @@ class _TurtleGraphicDemoState extends State<TurtleGraphicDemo>
   }
 
   @override
-  void didUpdateWidget(covariant TurtleGraphicDemo oldWidget) {
+  void didUpdateWidget(covariant HomePage oldWidget) {
     colors = List.generate(10, (index) => randomColor());
     create();
     super.didUpdateWidget(oldWidget);
@@ -135,13 +94,13 @@ class _TurtleGraphicDemoState extends State<TurtleGraphicDemo>
   void create() {
     var av = controller.value;
     path = TurtleGraphic()
-      ..genSpiral(
+      ..addSpiral(
         alpha: 30,
         distance: Tween<double>(begin: 10, end: 30).transform(av),
         count: 12,
         builder: (path) {
           var a = 12.0;
-          path.genSpiral(
+          path.addSpiral(
             alpha: a,
             distance: Tween<double>(begin: 10, end: 40).transform(av),
             deltaDistance: 1,
