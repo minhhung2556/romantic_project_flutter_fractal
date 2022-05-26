@@ -2,9 +2,9 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_fractal/flutter_fractal.dart';
-import 'package:flutter_fractal/src/math.dart';
+import 'package:flutter_fractal/src/utils/math.dart';
 
-import 'math.dart';
+import '../utils/math.dart';
 
 /// What is [TurtleGraphic]? - [Wikipedia](https://en.wikipedia.org/wiki/Turtle_graphics)
 /// This class is extended from [Path]. Easier to handle logic and re-use functions.

@@ -14,7 +14,7 @@ class _MyAppState extends State<MyApp> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Example',
+      title: 'Romantic Developer',
       theme: ThemeData(
         primarySwatch: Colors.blue,
         backgroundColor: Colors.black,
@@ -67,7 +67,7 @@ class _HomePageState extends State<HomePage>
     var size = MediaQuery.of(context).size;
     return Scaffold(
       appBar: AppBar(
-        title: Text('TurtleGraphic'),
+        title: Text('Romantic Developer'),
       ),
       backgroundColor: Colors.black,
       body: CustomPaint(
