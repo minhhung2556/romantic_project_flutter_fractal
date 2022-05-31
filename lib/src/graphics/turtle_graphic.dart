@@ -2,26 +2,24 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_fractal/flutter_fractal.dart';
-import 'package:flutter_fractal/src/utils/math.dart';
 
-import '../utils/math.dart';
-
-/// What is [TurtleGraphic]? - [Wikipedia](https://en.wikipedia.org/wiki/Turtle_graphics)
-/// This class is extended from [Path]. Easier to handle logic and re-use functions.
-class TurtleGraphic extends Path {
+class TurtleGraphicsPainter extends CustomPainter {
+  final Function(TurtleGraphicsPainter painter, Canvas canvas, Size size)
+      onDrawing;
   var _currentAngle = 0.0;
   var _currentPoint = Offset.zero;
-  var _points = <Offset>[];
+  Offset? _temporaryPoint;
+
+  TurtleGraphicsPainter({required this.onDrawing});
 
   /// Get current angle
   get currentAngle => _currentAngle;
 
+  get currentPoint => _currentPoint;
+
   /// Move the [currentPoint] to a point [x],[y]
-  @override
   void moveTo(double x, double y) {
-    super.moveTo(x, y);
     _currentPoint = Offset(x, y);
-    _points.add(_currentPoint);
   }
 
   /// Move the [currentPoint] to [p]
@@ -30,17 +28,14 @@ class TurtleGraphic extends Path {
   }
 
   /// Draw a line from the [currentPoint] to a point [x],[y]
-  @override
-  void lineTo(double x, double y) {
-    super.lineTo(x, y);
+  void drawLineTo(Canvas canvas, Paint paint, double x, double y) {
+    canvas.drawLine(_currentPoint, Offset(x, y), paint);
     moveTo(x, y);
   }
 
   /// Draw a line from the [currentPoint] to a point that translated [dx],[dy] from the [currentPoint].
-  @override
-  void relativeLineTo(double dx, double dy) {
-    super.relativeLineTo(dx, dy);
-    moveTo(_currentPoint.dx + dx, _currentPoint.dy + dy);
+  void drawRelativeLineTo(Canvas canvas, Paint paint, double dx, double dy) {
+    drawLineTo(canvas, paint, _currentPoint.dx + dx, _currentPoint.dy + dy);
   }
 
   /// Set an [angle] in degree. Why do I use degree? because it's easy to read and understand, it helps you make art easier.
@@ -71,117 +66,257 @@ class TurtleGraphic extends Path {
   }
 
   /// Draw a line that forward a [distance] by the [currentAngle], and then move the [currentPoint] to the end of line.
-  void lineForward(double distance) {
+  void drawLineForward(Canvas canvas, Paint paint, double distance) {
     double dx = distance * math.cos(_currentAngle),
         dy = distance * math.sin(_currentAngle);
-    lineTo(_currentPoint.dx + dx, _currentPoint.dy + dy);
+    drawLineTo(canvas, paint, _currentPoint.dx + dx, _currentPoint.dy + dy);
   }
 
   /// Draw a line that backward a [distance] by the [currentAngle], and then move the [currentPoint] to the end of line.
-  void lineBackward(double distance) {
-    lineForward(-distance);
+  void drawLineBackward(Canvas canvas, Paint paint, double distance) {
+    drawLineForward(canvas, paint, -distance);
   }
 
-  /// Get the current point that Turtle is placed.
-  Offset get currentPoint => _currentPoint;
+  /// Point to a point [x],[y] without setting the current point.
+  /// Then remind to call [resetTemporaryPoint] after using.
+  void pointTo(double x, double y) {
+    _temporaryPoint = Offset(_currentPoint.dx, _currentPoint.dy);
+    _currentPoint = Offset(x, y);
+  }
 
-  /// Get the list of points that Turtle was placed.
-  List<Offset> get points => _points;
+  void resetTemporaryPoint() {
+    if (_temporaryPoint != null) {
+      _currentPoint = Offset(_temporaryPoint!.dx, _temporaryPoint!.dy);
+      _temporaryPoint = null;
+    }
+  }
 
-  /// Get the center of this path. See also [Path].
-  Offset get center => getBounds().center;
+  @override
+  void paint(Canvas canvas, Size size) {
+    onDrawing(this, canvas, size);
+  }
+
+  @override
+  bool shouldRepaint(covariant TurtleGraphicsPainter oldDelegate) {
+    return true;
+  }
+
+  void drawPoint(Canvas canvas, Paint paint, Offset p, double size) {
+    canvas.drawCircle(p, size, paint);
+  }
 }
 
 /// The collection of some famous arts created by Turtle Graphic.
 /// This is an extension of [TurtleGraphic].
 /// You can you this template to make your own art.
-extension TurtleGraphicsCollections on TurtleGraphic {
+extension TurtleGraphicsCollections on TurtleGraphicsPainter {
+  void drawSpiralByRadius({
+    required Canvas canvas,
+    required Size size,
+    required double alpha,
+    double deltaAlpha: 0,
+    required double radius,
+    double deltaRadius: 0,
+    required int count,
+    required Function(Canvas canvas, Size size) drawDot,
+  }) {
+    var da = alpha;
+    var dr = radius;
+    final startPoint = Offset(_currentPoint.dx, _currentPoint.dy);
+    for (var i = 0; i < count; ++i) {
+      forward(dr);
+      drawDot(canvas, size);
+      turnRight(da);
+      pointTo(startPoint.dx, startPoint.dy);
+      da += deltaAlpha;
+      dr += deltaRadius;
+    }
+  }
+
   /// Add a Lévy C curve. See [Wikipedia](https://en.wikipedia.org/wiki/L%C3%A9vy_C_curve)
-  void addCCurve({
+  void drawCCurve({
     required double a,
     int N: 4,
+    required Canvas canvas,
+    required Size size,
+    required Function(
+            TurtleGraphicsPainter painter, Canvas canvas, Size size, double a)
+        lineForward,
   }) {
     double aV2_2 = a * (math.sqrt(2) / 2);
     if (N > 1) {
-      addCCurve(a: aV2_2, N: N - 1);
+      drawCCurve(
+        a: aV2_2,
+        N: N - 1,
+        canvas: canvas,
+        size: size,
+        lineForward: lineForward,
+      );
       turnRight(90);
-      addCCurve(a: aV2_2, N: N - 1);
+      drawCCurve(
+        a: aV2_2,
+        N: N - 1,
+        canvas: canvas,
+        size: size,
+        lineForward: lineForward,
+      );
       turnRight(-90);
     } else {
-      lineForward(a);
+      lineForward(this, canvas, size, a);
     }
   }
 
   /// Add a Dragon curve. See [Wikipedia](https://en.wikipedia.org/wiki/Dragon_curve)
-  void addDragonCurve({
+  void drawDragonCurve({
     required double a,
     int N: 5,
     double dir: 1,
+    required Canvas canvas,
+    required Size size,
+    required Function(
+            TurtleGraphicsPainter painter, Canvas canvas, Size size, double a)
+        lineForward,
   }) {
     double aV2_2 = a * (math.sqrt(2) / 2);
     if (N > 1) {
       turnRight((-45 * dir).toDouble());
-      addDragonCurve(a: aV2_2, N: N - 1, dir: 1);
+      drawDragonCurve(
+        a: aV2_2,
+        N: N - 1,
+        dir: 1,
+        canvas: canvas,
+        size: size,
+        lineForward: lineForward,
+      );
       turnRight((90 * dir).toDouble());
-      addDragonCurve(a: aV2_2, N: N - 1, dir: -1);
+      drawDragonCurve(
+        a: aV2_2,
+        N: N - 1,
+        dir: -1,
+        canvas: canvas,
+        size: size,
+        lineForward: lineForward,
+      );
       turnRight((-45 * dir).toDouble());
     } else {
-      lineForward(a);
+      lineForward(this, canvas, size, a);
     }
   }
 
   /// Add a Koch snowflake curve. See [Wikipedia](https://en.wikipedia.org/wiki/Koch_snowflake)
-  void addKochCurve({
+  void drawKochCurve({
     required double a,
     int N: 4,
     required double alpha,
+    required Canvas canvas,
+    required Size size,
+    required Function(
+            TurtleGraphicsPainter painter, Canvas canvas, Size size, double a)
+        lineForward,
   }) {
     assert(alpha <= 60 && alpha >= -60);
     if (N > 1) {
       a /= 3;
-      addKochCurve(a: a, N: N - 1, alpha: alpha);
+      drawKochCurve(
+        a: a,
+        N: N - 1,
+        alpha: alpha,
+        canvas: canvas,
+        size: size,
+        lineForward: lineForward,
+      );
       turnRight(-alpha);
-      addKochCurve(a: a, N: N - 1, alpha: alpha);
+      drawKochCurve(
+        a: a,
+        N: N - 1,
+        alpha: alpha,
+        canvas: canvas,
+        size: size,
+        lineForward: lineForward,
+      );
       turnRight(alpha * 2);
-      addKochCurve(a: a, N: N - 1, alpha: alpha);
+      drawKochCurve(
+        a: a,
+        N: N - 1,
+        alpha: alpha,
+        canvas: canvas,
+        size: size,
+        lineForward: lineForward,
+      );
       turnRight(-alpha);
-      addKochCurve(a: a, N: N - 1, alpha: alpha);
+      drawKochCurve(
+        a: a,
+        N: N - 1,
+        alpha: alpha,
+        canvas: canvas,
+        size: size,
+        lineForward: lineForward,
+      );
     } else {
-      lineForward(a);
+      lineForward(this, canvas, size, a);
     }
   }
 
   /// Add a Sierpiński triangle. See [Wikipedia](https://en.wikipedia.org/wiki/Sierpi%C5%84ski_triangle)
-  void addSierpinskiTriangle({
+  void drawSierpinskiTriangle({
     required Offset p,
     required double a,
     required double theta,
     int N: 4,
+    required Canvas canvas,
+    required Size size,
+    required Function(
+            TurtleGraphicsPainter painter, Canvas canvas, Size size, double a)
+        lineForward,
   }) {
     if (N > 1) {
       a /= 2;
       double alpha = theta * kDegToRad;
-      addSierpinskiTriangle(p: p, a: a, theta: theta, N: N - 1);
+      drawSierpinskiTriangle(
+        p: p,
+        a: a,
+        theta: theta,
+        N: N - 1,
+        canvas: canvas,
+        size: size,
+        lineForward: lineForward,
+      );
       var p2 = Offset(p.dx + (a * math.cos(math.pi / 3 + alpha)),
           p.dy - (a * math.sin(math.pi / 3 + alpha)));
-      addSierpinskiTriangle(p: p2, a: a, theta: theta, N: N - 1);
+      drawSierpinskiTriangle(
+        p: p2,
+        a: a,
+        theta: theta,
+        N: N - 1,
+        canvas: canvas,
+        size: size,
+        lineForward: lineForward,
+      );
       var p3 =
           Offset(p.dx + (a * math.cos(alpha)), p.dy - (a * math.sin(alpha)));
-      addSierpinskiTriangle(p: p3, a: a, theta: theta, N: N - 1);
+      drawSierpinskiTriangle(
+        p: p3,
+        a: a,
+        theta: theta,
+        N: N - 1,
+        canvas: canvas,
+        size: size,
+        lineForward: lineForward,
+      );
     } else {
       moveToPoint(p);
       setAngle(theta);
-      lineForward(a);
+      lineForward(this, canvas, size, a);
       turnRight(-120);
-      lineForward(a);
+      lineForward(this, canvas, size, a);
       turnRight(-120);
-      lineForward(a);
+      lineForward(this, canvas, size, a);
       turnRight(-120);
     }
   }
 
   /// Add a L-system trees. See [Wikipedia](https://en.wikipedia.org/wiki/L-system)
-  void addTree2Branches({
+  void drawTree2Branches({
     double a: 20.0,
     double deltaA1: 1,
     double deltaA2: 1,
@@ -190,86 +325,47 @@ extension TurtleGraphicsCollections on TurtleGraphic {
     double deltaAlpha1: 1,
     double alpha2: 36,
     double deltaAlpha2: -12,
+    required Canvas canvas,
+    required Size size,
+    required Function(
+            TurtleGraphicsPainter painter, Canvas canvas, Size size, double a)
+        lineForward,
   }) {
     if (N > 1) {
-      lineForward(a);
+      lineForward(this, canvas, size, a);
       turnRight(alpha1);
       var p = Offset(_currentPoint.dx, _currentPoint.dy);
-      addTree2Branches(
-          a: a + deltaA1,
-          N: N - 1,
-          alpha1: alpha1 + deltaA1,
-          deltaA1: deltaA1,
-          deltaA2: deltaA2,
-          alpha2: alpha2 + deltaAlpha2,
-          deltaAlpha1: deltaAlpha1,
-          deltaAlpha2: deltaAlpha2);
+      drawTree2Branches(
+        a: a + deltaA1,
+        N: N - 1,
+        alpha1: alpha1 + deltaA1,
+        deltaA1: deltaA1,
+        deltaA2: deltaA2,
+        alpha2: alpha2 + deltaAlpha2,
+        deltaAlpha1: deltaAlpha1,
+        deltaAlpha2: deltaAlpha2,
+        canvas: canvas,
+        size: size,
+        lineForward: lineForward,
+      );
       turnRight(-alpha1 - alpha2);
       moveToPoint(p);
-      addTree2Branches(
-          a: a + deltaA2,
-          N: N - 1,
-          alpha1: alpha2 + deltaA2,
-          deltaA1: deltaA1,
-          deltaA2: deltaA2,
-          alpha2: alpha2 + deltaAlpha2,
-          deltaAlpha1: deltaAlpha1,
-          deltaAlpha2: deltaAlpha2);
+      drawTree2Branches(
+        a: a + deltaA2,
+        N: N - 1,
+        alpha1: alpha2 + deltaA2,
+        deltaA1: deltaA1,
+        deltaA2: deltaA2,
+        alpha2: alpha2 + deltaAlpha2,
+        deltaAlpha1: deltaAlpha1,
+        deltaAlpha2: deltaAlpha2,
+        canvas: canvas,
+        size: size,
+        lineForward: lineForward,
+      );
       turnRight(alpha2);
     } else {
-      lineForward(a);
+      lineForward(this, canvas, size, a);
     }
-  }
-
-  /// Add a Spiral that repeatedly draws a path by [builder]. See [Wikipedia](https://en.wikipedia.org/wiki/Spiral)
-  void addSpiral({
-    required double alpha,
-    double deltaAlpha: 0,
-    required double distance,
-    double deltaDistance: 0,
-    required int count,
-    required Function(TurtleGraphic path) builder,
-  }) {
-    var da = alpha;
-    var dr = distance;
-
-    for (var i = 0; i < count; ++i) {
-      forward(dr);
-      builder(this);
-      turnRight(da);
-      da += deltaAlpha;
-      dr += deltaDistance;
-    }
-  }
-}
-
-/// This is a [CustomPainter], used to draw the [TurtleGraphic] path.
-class TurtleGraphicsPainter extends CustomPainter {
-  /// [path]: the [Path] to draw by [Canvas]
-  final TurtleGraphic path;
-
-  /// [brush] : the [Paint] describes how to draw the [path].
-  final Paint brush;
-
-  /// Constructor
-  TurtleGraphicsPainter({
-    required this.path,
-    required this.brush,
-  });
-
-  /// Painting method
-  @override
-  void paint(Canvas canvas, Size size) {
-    canvas.save();
-    var center = size.center(Offset.zero);
-    canvas.translate(center.dx - path.center.dx, center.dy - path.center.dy);
-    canvas.drawPath(path, brush);
-    canvas.restore();
-  }
-
-  /// Should repaint if the current [TurtleGraphic.points] is different from the old points.
-  @override
-  bool shouldRepaint(covariant TurtleGraphicsPainter oldDelegate) {
-    return path.points != oldDelegate.path.points;
   }
 }

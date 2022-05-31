@@ -1,5 +1,3 @@
-import 'dart:ui' as ui;
-
 import 'package:flutter/material.dart';
 import 'package:flutter_fractal/flutter_fractal.dart';
 
@@ -16,8 +14,7 @@ class _MyAppState extends State<MyApp> {
     return MaterialApp(
       title: 'Romantic Developer',
       theme: ThemeData(
-        primarySwatch: Colors.blue,
-        backgroundColor: Colors.black,
+        primarySwatch: Colors.deepPurple,
       ),
       home: HomePage(),
     );
@@ -29,92 +26,52 @@ class HomePage extends StatefulWidget {
   _HomePageState createState() => _HomePageState();
 }
 
-class _HomePageState extends State<HomePage>
-    with SingleTickerProviderStateMixin {
-  late TurtleGraphic path;
-  late AnimationController controller;
-  late List<Color> colors;
-  @override
-  void initState() {
-    controller =
-        AnimationController(vsync: this, duration: Duration(seconds: 2));
-    controller.addListener(() {
-      setState(() {
-        create();
-      });
-    });
-    controller.repeat(reverse: true);
-    colors = List.generate(10, (index) => randomColor());
-    create();
-    super.initState();
-  }
-
-  @override
-  void dispose() {
-    controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  void didUpdateWidget(covariant HomePage oldWidget) {
-    colors = List.generate(10, (index) => randomColor());
-    create();
-    super.didUpdateWidget(oldWidget);
-  }
-
+class _HomePageState extends State<HomePage> {
+  bool isLoading = false;
   @override
   Widget build(BuildContext context) {
     var size = MediaQuery.of(context).size;
     return Scaffold(
+      backgroundColor: Colors.white10,
       appBar: AppBar(
         title: Text('Romantic Developer'),
       ),
-      backgroundColor: Colors.black,
-      body: CustomPaint(
-        painter: TurtleGraphicsPainter(
-          path: path,
-          brush: Paint()
-            ..color = Colors.white
-            ..strokeWidth = 1
-            ..style = PaintingStyle.stroke
-            ..strokeCap = StrokeCap.round
-            ..strokeJoin = StrokeJoin.round
-            ..shader = ui.Gradient.radial(
-              Offset.zero,
-              size.width,
-              this.colors.map((e) => e).skip(6).toList(),
-              [0.0, 0.3, 0.6, 1.0],
+      body: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(20.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  FittedBox(
+                    child: Text(
+                      '$RainbowCircleToyLoadingIndicator',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  ),
+                  ElevatedButton(
+                    onPressed: () {
+                      setState(() {
+                        isLoading = !isLoading;
+                      });
+                    },
+                    child: Text(
+                      isLoading ? 'Done loading' : 'Load',
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  ),
+                ],
+              ),
             ),
+            RainbowCircleToyLoadingIndicator(
+              isLoading: isLoading,
+            ),
+          ],
         ),
-        size: MediaQuery.of(context).size,
       ),
     );
-  }
-
-  void create() {
-    var av = controller.value;
-    path = TurtleGraphic()
-      ..addSpiral(
-        alpha: 30,
-        distance: Tween<double>(begin: 10, end: 30).transform(av),
-        count: 12,
-        builder: (path) {
-          var a = 12.0;
-          path.addSpiral(
-            alpha: a,
-            distance: Tween<double>(begin: 10, end: 40).transform(av),
-            deltaDistance: 1,
-            count: 360 ~/ a,
-            deltaAlpha: 1,
-            builder: (path) {
-              path.addOval(Rect.fromCenter(
-                center: path.currentPoint,
-                width: Tween<double>(begin: 1, end: 5).transform(av),
-                height: Tween<double>(begin: 1, end: 5).transform(av),
-              ));
-            },
-          );
-        },
-      );
   }
 }
