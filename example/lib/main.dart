@@ -27,50 +27,47 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  bool isLoading = false;
+  bool isLoading = true;
+
   @override
   Widget build(BuildContext context) {
-    var size = MediaQuery.of(context).size;
     return Scaffold(
-      backgroundColor: Colors.white10,
-      appBar: AppBar(
-        title: Text('Romantic Developer'),
-      ),
-      body: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Padding(
-              padding: const EdgeInsets.all(20.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  FittedBox(
-                    child: Text(
-                      '$RainbowCircleToyLoadingIndicator',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(color: Colors.white),
-                    ),
-                  ),
-                  ElevatedButton(
-                    onPressed: () {
-                      setState(() {
-                        isLoading = !isLoading;
-                      });
-                    },
-                    child: Text(
-                      isLoading ? 'Done loading' : 'Load',
-                      style: TextStyle(color: Colors.white),
-                    ),
-                  ),
-                ],
-              ),
+      backgroundColor: Colors.black,
+      appBar: PreferredSize(
+        preferredSize: Size.fromHeight(kToolbarHeight),
+        child: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: RomanticColor.rainbowColorList(20),
+              begin: Alignment.centerLeft,
+              end: Alignment.centerRight,
             ),
-            RainbowCircleToyLoadingIndicator(
-              isLoading: isLoading,
-            ),
-          ],
+          ),
+          child: AppBar(
+            backgroundColor: Colors.transparent,
+            title: Text('Romantic Developer'),
+          ),
         ),
+      ),
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: [
+          Center(
+            child: Text(
+              '$ChakraLoadingIndicator',
+              style: TextStyle(color: Colors.white, fontSize: 24),
+            ),
+          ),
+          ChakraLoadingIndicator(),
+          Center(
+            child: Text(
+              '$SlinkyLoadingIndicator',
+              style: TextStyle(color: Colors.white, fontSize: 24),
+            ),
+          ),
+          SlinkyLoadingIndicator(),
+        ],
       ),
     );
   }

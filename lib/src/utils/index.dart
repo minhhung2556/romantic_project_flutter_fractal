@@ -1,2 +1,2 @@
-export 'graphics_utils.dart';
+export 'color_ex.dart';
 export 'math.dart';
