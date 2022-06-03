@@ -1,5 +1,3 @@
-import 'dart:ui' as ui;
-
 import 'package:flutter/material.dart';
 import 'package:flutter_fractal/flutter_fractal.dart';
 
@@ -14,10 +12,9 @@ class _MyAppState extends State<MyApp> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Example',
+      title: 'Romantic Developer',
       theme: ThemeData(
-        primarySwatch: Colors.blue,
-        backgroundColor: Colors.black,
+        primarySwatch: Colors.deepPurple,
       ),
       home: HomePage(),
     );
@@ -29,92 +26,49 @@ class HomePage extends StatefulWidget {
   _HomePageState createState() => _HomePageState();
 }
 
-class _HomePageState extends State<HomePage>
-    with SingleTickerProviderStateMixin {
-  late TurtleGraphic path;
-  late AnimationController controller;
-  late List<Color> colors;
-  @override
-  void initState() {
-    controller =
-        AnimationController(vsync: this, duration: Duration(seconds: 2));
-    controller.addListener(() {
-      setState(() {
-        create();
-      });
-    });
-    controller.repeat(reverse: true);
-    colors = List.generate(10, (index) => randomColor());
-    create();
-    super.initState();
-  }
-
-  @override
-  void dispose() {
-    controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  void didUpdateWidget(covariant HomePage oldWidget) {
-    colors = List.generate(10, (index) => randomColor());
-    create();
-    super.didUpdateWidget(oldWidget);
-  }
+class _HomePageState extends State<HomePage> {
+  bool isLoading = true;
 
   @override
   Widget build(BuildContext context) {
-    var size = MediaQuery.of(context).size;
     return Scaffold(
-      appBar: AppBar(
-        title: Text('TurtleGraphic'),
-      ),
       backgroundColor: Colors.black,
-      body: CustomPaint(
-        painter: TurtleGraphicsPainter(
-          path: path,
-          brush: Paint()
-            ..color = Colors.white
-            ..strokeWidth = 1
-            ..style = PaintingStyle.stroke
-            ..strokeCap = StrokeCap.round
-            ..strokeJoin = StrokeJoin.round
-            ..shader = ui.Gradient.radial(
-              Offset.zero,
-              size.width,
-              this.colors.map((e) => e).skip(6).toList(),
-              [0.0, 0.3, 0.6, 1.0],
+      appBar: PreferredSize(
+        preferredSize: Size.fromHeight(kToolbarHeight),
+        child: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: RomanticColor.rainbowColorList(20),
+              begin: Alignment.centerLeft,
+              end: Alignment.centerRight,
             ),
+          ),
+          child: AppBar(
+            backgroundColor: Colors.transparent,
+            title: Text('Romantic Developer'),
+          ),
         ),
-        size: MediaQuery.of(context).size,
+      ),
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: [
+          Center(
+            child: Text(
+              '$ChakraLoadingIndicator',
+              style: TextStyle(color: Colors.white, fontSize: 24),
+            ),
+          ),
+          ChakraLoadingIndicator(),
+          Center(
+            child: Text(
+              '$SlinkyLoadingIndicator',
+              style: TextStyle(color: Colors.white, fontSize: 24),
+            ),
+          ),
+          SlinkyLoadingIndicator(),
+        ],
       ),
     );
-  }
-
-  void create() {
-    var av = controller.value;
-    path = TurtleGraphic()
-      ..addSpiral(
-        alpha: 30,
-        distance: Tween<double>(begin: 10, end: 30).transform(av),
-        count: 12,
-        builder: (path) {
-          var a = 12.0;
-          path.addSpiral(
-            alpha: a,
-            distance: Tween<double>(begin: 10, end: 40).transform(av),
-            deltaDistance: 1,
-            count: 360 ~/ a,
-            deltaAlpha: 1,
-            builder: (path) {
-              path.addOval(Rect.fromCenter(
-                center: path.currentPoint,
-                width: Tween<double>(begin: 1, end: 5).transform(av),
-                height: Tween<double>(begin: 1, end: 5).transform(av),
-              ));
-            },
-          );
-        },
-      );
   }
 }
